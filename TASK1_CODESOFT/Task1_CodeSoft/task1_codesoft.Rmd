@@ -1,0 +1,125 @@
+---
+title: "TASK1"
+author: "Dilrukshi KAwya"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+setwd("C:/codesoft/TASK1_CODESOFT")
+getwd()
+```
+```{r}
+
+titanic<-read.csv("Titanic-Dataset.csv")
+str(titanic)
+summary(titanic)
+```
+
+#check the missing values
+
+```{r}
+sapply(titanic,function(x) sum(is.na(x)))
+```
+#fill missing values in the Age column with the mean Age   
+
+
+
+```{r}
+titanic$Age[is.na(titanic$Age)] <- mean(titanic$Age,na.rm = TRUE)
+
+titanic$Embarked[is.na(titanic$Embarked)]<-"S"
+```
+
+#convert categorical variables to factors   
+
+```{r}
+titanic$Sex<-as.factor(titanic$Sex)
+titanic$Embarked<-as.factor(titanic$Embarked)
+
+```
+
+#drop un necessary columns    
+
+```{r}
+titanic<-titanic%>%select(-Name,-Ticket,-Cabin)
+head(titanic)
+```
+
+```{r}
+titanic$Familysize<- titanic$SibSp + titanic$Parch + 1
+test_data$Familysize <- test_data$SibSp + test_data$Parch + 1
+
+```
+
+#split the data partition   
+
+```{r}
+set.seed(123)
+titanicIndex<-createDataPartition(titanic$Survived,p=0.8,list = FALSE)
+train_data<- titanic[titanicIndex,]
+test_data<- titanic[-titanicIndex,]
+```
+
+#Build a RandomForest Model   
+
+```{r}
+model<-randomForest(Survived ~ Pclass + Sex + Age + Fare + Embarked + Familysize,data = train_data)
+print(model)
+```
+
+#predicting on Test Data   
+```{r}
+
+test_pred<-predict(model,newdata = test_data)
+test_pred
+```
+# Evaluate the Model   
+
+```{r}
+test_data$Survived <-factor(test_data$Survived, levels = c(0, 1))
+test_pred <- factor(test_pred, levels = levels(test_data$Survived))
+levels(test_pred) <- levels(test_data$Survived)
+
+
+confusionMatrix(test_pred,test_data$Survived)
+```
+
+```{r}
+importance<- varImpPlot(model)
+print(importance)
+```
+```{r}
+new_data <- data.frame(
+  Pclass = 3,
+  Sex = factor("male", levels = levels(titanic$Sex)),
+  Age = 22,
+  SibSp = 1,
+  Parch = 0,
+  Fare = 7.25,
+  Familysize = 2,
+  Embarked = factor("S", levels = levels(titanic$Embarked))
+)
+
+new_pred<- predict(model,new_data)
+print(new_pred)
+
+
+```
+#Summary    
+ Data Preparation: The Titanic dataset (titanic) is split into training and test sets.   
+ 
+Model Training: A random forest classifier (randomForest) is trained on the training data (train_data).   
+Model Evaluation: The model's performance is evaluated using a confusion matrix (confusionMatrix) on the test data (test_data).    
+
+Feature Importance: The importance of each predictor variable is visualized (varImpPlot).    
+
+Prediction: The model is used to predict survival for a new passenger (new_data).    
+
+#interpretation    
+
+
+
+
+
